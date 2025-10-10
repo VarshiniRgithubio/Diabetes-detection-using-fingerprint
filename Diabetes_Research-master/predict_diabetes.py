@@ -25,7 +25,28 @@ def load_image(path, target_size=(224,224)):
 def predict_single(model, img_path):
     arr = load_image(img_path)
     pred = model.predict(np.expand_dims(arr, axis=0))[0][0]
-    prob = float(pred) * 100.0
+    # interpret sigmoid output with respect to saved class ordering if available
+    try:
+        import json, os
+        class_file = os.path.join(os.path.dirname('models'), 'class_names.json')
+        # prefer model attribute if set
+        class_names = getattr(model, '_class_names', None)
+        if class_names is None and os.path.exists('models/class_names.json'):
+            class_names = json.load(open('models/class_names.json','r'))
+    except Exception:
+        class_names = None
+
+    p = float(pred)
+    p_diabetic = p
+    try:
+        if class_names and len(class_names) >= 2:
+            # sigmoid corresponds to class_names[1]
+            if class_names[1] != 'diabetic':
+                p_diabetic = 1.0 - p
+    except Exception:
+        p_diabetic = p
+
+    prob = p_diabetic * 100.0
     return prob
 
 

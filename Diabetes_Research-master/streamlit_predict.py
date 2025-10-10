@@ -16,6 +16,15 @@ def load_model_if_needed():
         return None
     import tensorflow as tf
     _MODEL = tf.keras.models.load_model(MODEL_PATH)
+    # load class name ordering if present so callers can interpret the sigmoid output
+    class_json = os.path.join(os.path.dirname(MODEL_PATH), 'class_names.json')
+    try:
+        import json
+        if os.path.exists(class_json):
+            _MODEL._class_names = json.load(open(class_json, 'r'))
+    except Exception:
+        # non-fatal; leave attribute absent if we can't read it
+        pass
     return _MODEL
 
 
@@ -54,8 +63,22 @@ def main():
 
         x = preprocess_pil(img)
         pred = model.predict(x)[0][0]
-        prob = float(pred) * 100.0
-        label = 'Diabetic' if pred >= 0.5 else 'Non-diabetic'
+        # model.predict returns a sigmoid float; depending on training class ordering
+        # the value corresponds to the probability of class index 1 (the "second" class
+        # in models/class_names.json). Convert to probability for the 'diabetic' class.
+        class_names = getattr(model, '_class_names', None)
+        # default assumption: sigmoid output is p(diabetic)
+        p_diabetic = float(pred)
+        try:
+            if class_names and len(class_names) >= 2:
+                # sigmoid gives prob for class_names[1]
+                if class_names[1] != 'diabetic':
+                    p_diabetic = 1.0 - float(pred)
+        except Exception:
+            p_diabetic = float(pred)
+
+        prob = p_diabetic * 100.0
+        label = 'Diabetic' if p_diabetic >= 0.5 else 'Non-diabetic'
 
         st.metric('Prediction', f'{prob:.2f}%')
         st.write('Label:', label)

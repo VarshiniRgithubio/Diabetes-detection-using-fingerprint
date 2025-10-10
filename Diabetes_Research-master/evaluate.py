@@ -66,7 +66,24 @@ def main():
         try:
             x = load_image(path)
             pred = model.predict(np.expand_dims(x, axis=0))[0][0]
-            prob = float(pred)
+            p = float(pred)
+            # interpret according to class_names.json ordering if present
+            try:
+                class_file = 'models/class_names.json'
+                if os.path.exists(class_file):
+                    import json
+                    cn = json.load(open(class_file,'r'))
+                else:
+                    cn = None
+            except Exception:
+                cn = None
+
+            prob = p
+            try:
+                if cn and len(cn) >= 2 and cn[1] != 'diabetic':
+                    prob = 1.0 - p
+            except Exception:
+                prob = p
             y_prob.append(prob)
             true = 1 if label == 'diabetic' else 0
             y_true.append(true)
