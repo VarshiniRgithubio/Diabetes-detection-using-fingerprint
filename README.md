@@ -3,7 +3,6 @@ Diabetes detection from fingerprint images
 This repository contains a demo pipeline that explores diabetes risk prediction from fingerprint images. It includes a CNN classifier (MobileNetV2), handcrafted feature extraction, a Mamdani fuzzy inference prototype, explainability (Grad‑CAM) and utilities to build membership functions, plots and a small Streamlit UI.
 
 Use this README as the single place to find how to run training, inference, feature extraction, fuzzy inference, and to reproduce the plots used in presentations.
-
 What is in this project (short)
 - A CNN classifier (MobileNetV2-based) trained to predict diabetic vs non-diabetic from fingerprint image crops. Outputs a probability (0..1).
 - Grad‑CAM explanation utility to visualize salient image regions affecting the CNN output.
